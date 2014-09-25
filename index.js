@@ -5,6 +5,7 @@ var cluster = require('cluster')
   , dollop = require('dollop')
   , parse = require('./parse')
   , match = require('./match')
+  , addr = require('addr')
 
 var cli = require('commander')
   .version(pkg.version)
@@ -12,6 +13,7 @@ var cli = require('commander')
   .option('-p, --port <port>', 'port to listen on (default: 80)', Number, 80)
   .option('-w, --workers <num>', 'number of workers to fork (default: CPU count)', Number, require('os').cpus().length)
   .option('-h, --hostfile <path>', 'path to hosts file (default: /etc/hosts)', String, '/etc/hosts')
+  .option('-v, --verbose', 'verbose request logging')
   .option('--setuid <uid|username>', '(POSIX, requires root) run under this uid (or username)')
   .option('--setgid <gid|groupname>', '(POSIX, requires root) run under this gid (or groupname)')
   .parse(process.argv)
@@ -20,6 +22,7 @@ var options = {
   port: cli.port,
   workers: cli.workers,
   hostfile: cli.hostfile,
+  verbose: cli.verbose,
   setuid: cli.setuid,
   setgid: cli.setgid
 };
@@ -31,6 +34,27 @@ else {
   makeWorker(options);
 }
 
+function log () {
+  var args = [].slice.call(arguments).map(function (arg) {
+    return JSON.stringify(arg);
+  }).join(' ');
+  console.log(new Date() + ' [message]', args);
+}
+
+function logRequest () {
+  var args = [].slice.call(arguments).map(function (arg) {
+    return JSON.stringify(arg);
+  }).join(' ');
+  console.log(new Date() + ' [request]', args);
+}
+
+function error () {
+  var args = [].slice.call(arguments).map(function (arg) {
+    return JSON.stringify(arg);
+  }).join(' ');
+  console.error(new Date() + ' [error]', args);
+}
+
 function makeMaster (options) {
   var latch = options.workers;
   var d = dollop([options.hostfile]);
@@ -38,18 +62,18 @@ function makeMaster (options) {
     function sendOptions (msg) {
       if (msg === 'options') {
         worker.send('options:' + JSON.stringify(options));
-        if (!--latch) console.log('domain gate ready.');
+        if (!--latch) log('domain gate ready.');
       }
     }
     worker.on('message', sendOptions);
   });
   cluster.on('disconnect', function (worker) {
-    console.error('worker ' + worker.process.pid + ' disconnected. killing...');
+    error('worker ' + worker.process.pid + ' disconnected. killing...');
     worker.kill();
   });
   cluster.on('exit', function (worker, code, signal) {
     var exitCode = worker.process.exitCode;
-    console.error('worker ' + worker.process.pid + ' died (' + exitCode + '). restarting...');
+    error('worker ' + worker.process.pid + ' died (' + exitCode + '). restarting...');
     latch++;
     cluster.fork();
   });
@@ -58,13 +82,13 @@ function makeMaster (options) {
       var hostfile = files[0].data({encoding: 'utf8'});
       options.vhosts = parse(hostfile);
       if (d.ready) {
-        console.log('updated options', JSON.stringify(options, null, 2));
+        log('updated options', options);
         Object.keys(cluster.workers).forEach(function (id) {
           cluster.workers[id].send('options:' + JSON.stringify(options));
         });
       }
       else {
-        console.log('starting with options', JSON.stringify(options, null, 2));
+        log('starting with options', options);
         for (var i = 0; i < options.workers; i++) cluster.fork();
       }
     }
@@ -80,14 +104,26 @@ function makeWorker (options) {
   var server = http.createServer(function (req, res) {
     var vhost = match(options.vhosts, req);
     if (!vhost) {
+      if (options.verbose) logRequest(addr(req), 'NULL', req.method, req.url, req.headers);
       res.writeHead(404);
       return res.end();
     }
-    proxy.web(req, res, { target: vhost.target });
+    if (options.verbose) logRequest(addr(req), vhost.target, req.method, req.url, req.headers);
+    proxy.web(req, res, { target: vhost.target }, function (err, req, res) {
+      error(err, addr(req), vhost.target, req.method, req.url, req.headers);
+      res.writeHead(500);
+      res.end();
+    });
   });
   server.on('upgrade', function (req, socket, head) {
     var vhost = match(options.vhosts, req);
-    if (vhost) proxy.ws(req, socket, head, { target: vhost.target });
+    if (vhost) {
+      if (options.verbose) logRequest(vhost.target, addr(req), 'UPGRADE', req.url, req.headers);
+      proxy.ws(req, socket, head, { target: vhost.target }, function (err, req, socket) {
+        error(err, addr(req), vhost.target, req.method, req.url, req.headers);
+        socket.destroy();
+      });
+    }
   });
   server.on('listening', function () {
     if (options.setgid) process.setgid(options.setgid);
