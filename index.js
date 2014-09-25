@@ -5,7 +5,6 @@ var cluster = require('cluster')
   , dollop = require('dollop')
   , parse = require('./parse')
   , match = require('./match')
-  , addr = require('addr')
 
 var cli = require('commander')
   .version(pkg.version)
@@ -104,7 +103,7 @@ function makeWorker (options) {
   var listening = false;
   var proxy = httpProxy.createProxyServer();
   proxy.on('error', function (err, req, res, target) {
-    error(err, addr(req), target, req.method, req.url, req.headers);
+    error(err, target, req.method, req.url, req.headers);
     res.writeHead(500, {'Content-Type': 'text/plain'});
     res.end('There was an error fulfilling your request. Please try again later.');
   });
@@ -138,9 +137,9 @@ function makeWorker (options) {
   server.on('upgrade', function (req, socket, head) {
     var vhost = match(options.vhosts, req);
     if (vhost) {
-      if (options.verbose) logRequest(vhost.target, addr(req), 'UPGRADE', req.url, req.headers);
+      if (options.verbose) logRequest(vhost.target, 'UPGRADE', req.url, req.headers);
       proxy.ws(req, socket, head, { target: vhost.target }, function (err, req, socket) {
-        error(err, addr(req), vhost.target, req.method, req.url, req.headers);
+        error(err, vhost.target, req.method, req.url, req.headers);
         socket.destroy();
       });
     }
