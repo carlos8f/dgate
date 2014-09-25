@@ -3,7 +3,6 @@ var cluster = require('cluster')
   , httpProxy = require('http-proxy')
   , pkg = require('./package.json')
   , dollop = require('dollop')
-  , minimatch = require('minimatch')
   , parse = require('./parse')
   , match = require('./match')
 
@@ -22,8 +21,7 @@ var options = {
   workers: cli.workers,
   hostfile: cli.hostfile,
   setuid: cli.setuid,
-  setgid: cli.setgid,
-  hosts: []
+  setgid: cli.setgid
 };
 
 if (cluster.isMaster) {
@@ -35,6 +33,7 @@ else {
 
 function makeMaster (options) {
   var latch = options.workers;
+  var d = dollop([options.hostfile]);
   cluster.on('fork', function (worker) {
     function sendOptions (msg) {
       if (msg === 'options') {
@@ -54,13 +53,20 @@ function makeMaster (options) {
     latch++;
     cluster.fork();
   });
-  var d = dollop([options.hostfile]);
   d.on('scan', function (files) {
-    options.hosts = [];
     if (files.length) {
       var hostfile = files[0].data({encoding: 'utf8'});
       options.vhosts = parse(hostfile);
-      for (var i = 0; i < options.workers; i++) cluster.fork();
+      if (d.ready) {
+        console.log('updated options', JSON.stringify(options, null, 2));
+        Object.keys(cluster.workers).forEach(function (id) {
+          cluster.workers[id].send('options:' + JSON.stringify(options));
+        });
+      }
+      else {
+        console.log('starting with options', JSON.stringify(options, null, 2));
+        for (var i = 0; i < options.workers; i++) cluster.fork();
+      }
     }
     else {
       throw new Error('hostfile not found!');
