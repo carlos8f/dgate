@@ -1,7 +1,7 @@
 {
   "name": "dgate",
   "description": "Domain gateway, a simple clustered HTTP virtual host router",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "bin": "./dgate",
   "repository": {
     "type": "git",
