@@ -10,10 +10,11 @@ var cluster = require('cluster')
 var cli = require('commander')
   .version(pkg.version)
   .description(pkg.description)
-  .option('-p, --port <port>', 'port to listen on (default: 80)', Number, 80)
+  .option('-p, --port <port>', 'port to listen on (default: 8080)', Number, 8080)
   .option('-w, --workers <num>', 'number of workers to fork (default: CPU count)', Number, require('os').cpus().length)
   .option('-h, --hostfile <path>', 'path to hosts file (default: /etc/hosts)', String, '/etc/hosts')
   .option('-v, --verbose', 'verbose request logging')
+  .option('--no-header', 'do not add X-Gate header')
   .option('--setuid <uid|username>', '(POSIX, requires root) run under this uid (or username)')
   .option('--setgid <gid|groupname>', '(POSIX, requires root) run under this gid (or groupname)')
   .parse(process.argv)
@@ -23,6 +24,7 @@ var options = {
   workers: cli.workers,
   hostfile: cli.hostfile,
   verbose: cli.verbose,
+  header: cli.header,
   setuid: cli.setuid,
   setgid: cli.setgid
 };
@@ -62,7 +64,7 @@ function makeMaster (options) {
     function sendOptions (msg) {
       if (msg === 'options') {
         worker.send('options:' + JSON.stringify(options));
-        if (!--latch) log('domain gate ready.');
+        if (!--latch) log('domain gate ready on port ' + options.port);
       }
     }
     worker.on('message', sendOptions);
@@ -82,10 +84,10 @@ function makeMaster (options) {
       var hostfile = files[0].data({encoding: 'utf8'});
       options.vhosts = parse(hostfile);
       if (d.ready) {
-        log('updated options', options);
         Object.keys(cluster.workers).forEach(function (id) {
           cluster.workers[id].send('options:' + JSON.stringify(options));
         });
+        log('updated options', options);
       }
       else {
         log('starting with options', options);
@@ -101,19 +103,35 @@ function makeMaster (options) {
 function makeWorker (options) {
   var listening = false;
   var proxy = httpProxy.createProxyServer();
+  proxy.on('error', function (err, req, res, target) {
+    error(err, addr(req), target, req.method, req.url, req.headers);
+    res.writeHead(500, {'Content-Type': 'text/plain'});
+    res.end('There was an error fulfilling your request. Please try again later.');
+  });
+  proxy.on('proxyReq', function (proxyReq, req, res, _opts) {
+    if (options.header) proxyReq.setHeader('X-Gate', pkg.name + '/' + pkg.version);
+    proxyReq.once('response', function (proxyRes) {
+      var meta = {size: 0};
+      proxyRes.on('data', function (data) {
+        meta.size += data.length;
+      });
+      proxyRes.once('end', function () {
+        meta.statusCode = proxyRes.statusCode;
+        res.emit('proxyMeta', meta);
+      });
+    });
+  });
   var server = http.createServer(function (req, res) {
     var vhost = match(options.vhosts, req);
     if (!vhost) {
-      if (options.verbose) logRequest(addr(req), 'NULL', req.method, req.url, req.headers);
+      if (options.verbose) logRequest('NULL', req.method, req.url, req.headers);
       res.writeHead(404);
       return res.end();
     }
-    if (options.verbose) logRequest(addr(req), vhost.target, req.method, req.url, req.headers);
-    proxy.web(req, res, { target: vhost.target }, function (err, req, res) {
-      error(err, addr(req), vhost.target, req.method, req.url, req.headers);
-      res.writeHead(500);
-      res.end();
+    res.once('proxyMeta', function (meta) {
+      logRequest(vhost.target, req.method, req.url, req.headers, meta.statusCode, meta.size);
     });
+    proxy.web(req, res, {target: vhost.target});
   });
   server.on('upgrade', function (req, socket, head) {
     var vhost = match(options.vhosts, req);

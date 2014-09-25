@@ -1,11 +1,8 @@
 {
   "name": "dgate",
-  "description": "domain gateway",
+  "description": "Domain gateway, a simple clustered HTTP virtual host router",
   "version": "0.0.0",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "bin": "./dgate",
   "repository": {
     "type": "git",
     "url": "git@gist.github.com:/2f4d3154687fb1641eca.git"
@@ -13,7 +10,7 @@
   "author": "Carlos Rodriguez <carlos@s8f.org> (http://s8f.org/)",
   "license": "MIT",
   "dependencies": {
-    "addr": "^1.0.0",
+    "addr": "^1.0.1",
     "commander": "^2.3.0",
     "dollop": "^0.4.1",
     "http-proxy": "^1.4.3",

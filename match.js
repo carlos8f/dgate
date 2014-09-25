@@ -1,10 +1,12 @@
 var minimatch = require('minimatch')
-  , parseUrl = require('url').parse
+  , url = require('url')
 
 module.exports = function (vhosts, req) {
+  var href = 'http' + (req.connection.encrypted ? 's' : '') + '://' + (req.headers['host'] || 'localhost') + req.url;
+  var parsedUrl = url.parse(href);
   for (var idx = 0; idx < vhosts.length; idx++) {
     var v = vhosts[idx];
-    if (minimatch(req.headers['host'] || '', v.host) && minimatch(parseUrl(req.url).pathname, v.path)) {
+    if (minimatch(parsedUrl.hostname, v.host) && minimatch(parsedUrl.pathname, v.path)) {
       return v;
     }
   }
