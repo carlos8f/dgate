@@ -1,0 +1,21 @@
+{
+  "name": "dgate",
+  "description": "domain gateway",
+  "version": "0.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@gist.github.com:/2f4d3154687fb1641eca.git"
+  },
+  "author": "Carlos Rodriguez <carlos@s8f.org> (http://s8f.org/)",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^2.3.0",
+    "dollop": "^0.4.1",
+    "http-proxy": "^1.4.3",
+    "minimatch": "^1.0.0"
+  }
+}
