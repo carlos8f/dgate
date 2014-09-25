@@ -110,16 +110,18 @@ function makeWorker (options) {
   });
   proxy.on('proxyReq', function (proxyReq, req, res, _opts) {
     if (options.header) proxyReq.setHeader('X-Gate', pkg.name + '/' + pkg.version);
-    proxyReq.once('response', function (proxyRes) {
-      var meta = {size: 0};
-      proxyRes.on('data', function (data) {
-        meta.size += data.length;
+    if (options.verbose) {
+      proxyReq.once('response', function (proxyRes) {
+        var meta = {size: 0};
+        proxyRes.on('data', function (data) {
+          meta.size += data.length;
+        });
+        proxyRes.once('end', function () {
+          meta.statusCode = proxyRes.statusCode;
+          res.emit('proxyMeta', meta);
+        });
       });
-      proxyRes.once('end', function () {
-        meta.statusCode = proxyRes.statusCode;
-        res.emit('proxyMeta', meta);
-      });
-    });
+    }
   });
   var server = http.createServer(function (req, res) {
     var vhost = match(options.vhosts, req);
