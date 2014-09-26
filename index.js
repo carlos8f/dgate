@@ -28,12 +28,8 @@ var options = {
   setgid: cli.setgid
 };
 
-if (cluster.isMaster) {
-  makeMaster(options);
-}
-else {
-  makeWorker(options);
-}
+if (cluster.isMaster) makeMaster(options);
+else makeWorker(options);
 
 function log () {
   var args = [].slice.call(arguments).map(function (arg) {
@@ -138,7 +134,7 @@ function makeWorker (options) {
     var vhost = match(options.vhosts, req);
     if (vhost) {
       if (options.verbose) logRequest(vhost.target, 'UPGRADE', req.url, req.headers);
-      proxy.ws(req, socket, head, { target: vhost.target }, function (err, req, socket) {
+      proxy.ws(req, socket, head, {target: vhost.target}, function (err, req, socket) {
         error(err, vhost.target, req.method, req.url, req.headers);
         socket.destroy();
       });
