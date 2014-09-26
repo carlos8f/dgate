@@ -13,9 +13,7 @@ module.exports = function (data) {
       if (!~target.indexOf('http')) target = 'http' + (options.https ? 's' : '') + '://' + target;
       if (options.port) target += ':' + options.port;
       m[1].slice(1).forEach(function (host) {
-        if (options.wildcard && options.wildcard !== '0' && options.wildcard !== 'false') {
-          host = '{' + host + ',*.' + host + '}';
-        }
+        if (options.wildcard) host = '{' + host + ',*.' + host + '}';
         vhosts.push({
           host: host,
           path: options.path || '**',

@@ -12,6 +12,7 @@
   "dependencies": {
     "commander": "^2.3.0",
     "dollop": "^0.4.1",
+    "href": "^0.1.1",
     "http-proxy": "^1.4.3",
     "minimatch": "^1.0.0"
   },

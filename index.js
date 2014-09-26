@@ -5,6 +5,7 @@ var cluster = require('cluster')
   , dollop = require('dollop')
   , parse = require('./parse')
   , match = require('./match')
+  , href = require('href')
 
 var cli = require('commander')
   .version(pkg.version)
@@ -82,10 +83,10 @@ function makeMaster (options) {
         Object.keys(cluster.workers).forEach(function (id) {
           cluster.workers[id].send('options:' + JSON.stringify(options));
         });
-        log('updated options', options);
+        if (options.verbose) log('updated options', options);
       }
       else {
-        log('starting with options', options);
+        if (options.verbose) log('starting with options', options);
         for (var i = 0; i < options.workers; i++) cluster.fork();
       }
     }
@@ -119,16 +120,29 @@ function makeWorker (options) {
     }
   });
   var server = http.createServer(function (req, res) {
-    var vhost = match(options.vhosts, req);
-    if (!vhost) {
-      if (options.verbose) logRequest('NULL', req.method, req.url, req.headers);
-      res.writeHead(404);
-      return res.end();
-    }
-    res.once('proxyMeta', function (meta) {
-      logRequest(vhost.target, req.method, req.url, req.headers, meta.statusCode, meta.size);
+    href(req, res, function () {
+      var vhost = match(options.vhosts, req);
+      if (!vhost) {
+        if (options.verbose) logRequest('NULL', req.method, req.url, req.headers);
+        res.writeHead(404);
+        return res.end();
+      }
+      if (vhost.options.canonical && req.href.hostname !== vhost.options.canonical) {
+        var redirect = vhost.options.canonical;
+        if (!~redirect.indexOf('http')) redirect = 'http' + (vhost.options.https ? 's' : '') + '://' + redirect;
+        redirect += req.href.path;
+        res.writeHead(301, {'Location': redirect});
+        return res.end();
+      }
+      if (vhost.options.https && req.href.protocol !== 'https:') {
+        res.writeHead(301, {'Location': req.href.href.replace(/^http:/, 'https:')});
+        return res.end();
+      }
+      res.once('proxyMeta', function (meta) {
+        logRequest(vhost.target, req.method, req.url, req.headers, meta.statusCode, meta.size);
+      });
+      proxy.web(req, res, {target: vhost.target});
     });
-    proxy.web(req, res, {target: vhost.target});
   });
   server.on('upgrade', function (req, socket, head) {
     var vhost = match(options.vhosts, req);

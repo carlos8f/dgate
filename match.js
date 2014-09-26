@@ -1,13 +1,13 @@
-var minimatch = require('minimatch')
-  , url = require('url')
+var minimatch = require('minimatch');
 
 module.exports = function (vhosts, req) {
-  var href = 'http' + (req.connection.encrypted ? 's' : '') + '://' + (req.headers['host'] || 'localhost') + req.url;
-  var parsedUrl = url.parse(href);
+  var dfault;
   for (var idx = 0; idx < vhosts.length; idx++) {
     var v = vhosts[idx];
-    if (minimatch(parsedUrl.hostname, v.host) && minimatch(parsedUrl.pathname, v.path)) {
+    if (v.options.default && !dfault) dfault = v;
+    if (minimatch(req.href.hostname, v.host) && minimatch(req.href.pathname, v.path)) {
       return v;
     }
   }
+  return dfault;
 };
