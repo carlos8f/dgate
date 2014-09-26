@@ -25,6 +25,10 @@ with form urlencoding:
 # route traffic from *.blah.dev to terraeclipse.com
 #dgate target=terraeclipse.com&wildcard=true
 127.0.0.1    blah.dev
+
+# make this the default vhost, with a canonical url (also force https)
+#dgate port=3002&default=true&canonical=s8f.org&https=true
+127.0.0.1    s8f.org www.s8f.org
 ```
 
 Start the server:
