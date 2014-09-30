@@ -64,7 +64,7 @@ describe('tests', function () {
     request('http://localhost:' + port + '/', function (err, resp, body) {
       assert.ifError(err);
       assert.equal(200, resp.statusCode);
-      assert.equal(body, 'B');
+      assert.equal(body, 'B,localhost');
       done();
     });
   });
@@ -72,7 +72,7 @@ describe('tests', function () {
     request({uri: 'http://localhost:' + port + '/', headers: {'Host': 'a.app.dev'}}, function (err, resp, body) {
       assert.ifError(err);
       assert.equal(200, resp.statusCode);
-      assert.equal(body, 'A');
+      assert.equal(body, 'A,a.app.dev');
       done();
     });
   });
@@ -80,7 +80,7 @@ describe('tests', function () {
     request({uri: 'http://localhost:' + port + '/', headers: {'Host': 'b.app.dev'}}, function (err, resp, body) {
       assert.ifError(err);
       assert.equal(200, resp.statusCode);
-      assert.equal(body, 'B');
+      assert.equal(body, 'B,b.app.dev');
       done();
     });
   });
@@ -88,7 +88,7 @@ describe('tests', function () {
     request({uri: 'http://localhost:' + port + '/', headers: {'Host': 'c.app.dev'}}, function (err, resp, body) {
       assert.ifError(err);
       assert.equal(200, resp.statusCode);
-      assert.equal(body, 'C');
+      assert.equal(body, 'C,c.app.dev');
       server.close();
       done();
     });
@@ -100,6 +100,7 @@ describe('tests', function () {
     Object.keys(servers).forEach(function (letter) {
       options.vhosts.push({
         host: letter.toLowerCase() + '.app.dev',
+        sethost: 'app.dev',
         wildcard: letter === 'B',
         path: '**',
         target: 'http://localhost:' + servers[letter],
@@ -123,7 +124,30 @@ describe('tests', function () {
     request({uri: 'http://localhost:' + port + '/', headers: {'Host': 'blah.b.app.dev'}}, function (err, resp, body) {
       assert.ifError(err);
       assert.equal(200, resp.statusCode);
-      assert.equal(body, 'B');
+      assert.equal(body, 'B,app.dev');
+      done();
+    });
+  });
+  it('request 8', function (done) {
+    request({uri: 'http://localhost:' + port + '/', headers: {'Host': 'foo.bar.b.app.dev'}}, function (err, resp, body) {
+      assert.ifError(err);
+      assert.equal(200, resp.statusCode);
+      assert.equal(body, 'B,app.dev');
+      done();
+    });
+  });
+  it('request 9', function (done) {
+    request({uri: 'http://localhost:' + port + '/', headers: {'Host': 'c.app.dev'}}, function (err, resp, body) {
+      assert.ifError(err);
+      assert.equal(200, resp.statusCode);
+      assert.equal(body, 'C,app.dev');
+      done();
+    });
+  });
+  it('request 10', function (done) {
+    request({uri: 'http://localhost:' + port + '/', headers: {'Host': 'app.dev'}}, function (err, resp, body) {
+      assert.ifError(err);
+      assert.equal(404, resp.statusCode);
       done();
     });
   });
