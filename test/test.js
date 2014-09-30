@@ -15,14 +15,7 @@ describe('tests', function () {
       proc.kill();
     });
   });
-  after(function (done) {
-    if (server) {
-      server.once('close', done);
-      server.close();
-    }
-    else done();
-  });
-  it('server', function (done) {
+  it('server 1', function (done) {
     var options = {
       vhosts: []
     };
@@ -34,17 +27,68 @@ describe('tests', function () {
         options: {}
       });
     });
-    var server = dgate.server(options);
+    server = dgate.server(options);
     server.listen(0, function () {
       port = server.address().port;
       done();
     });
   });
-  it('request', function (done) {
+  it('request 1', function (done) {
+    request('http://localhost:' + port + '/', function (err, resp, body) {
+      assert.ifError(err);
+      assert.equal(404, resp.statusCode);
+      server.close();
+      done();
+    });
+  });
+  it('server 2', function (done) {
+    var options = {
+      vhosts: []
+    };
+    Object.keys(servers).forEach(function (letter) {
+      options.vhosts.push({
+        host: letter.toLowerCase() + '.app.dev',
+        default: letter === 'B',
+        path: '**',
+        target: 'http://localhost:' + servers[letter],
+        options: {}
+      });
+    });
+    server = dgate.server(options);
+    server.listen(0, function () {
+      port = server.address().port;
+      done();
+    });
+  });
+  it('request 2', function (done) {
     request('http://localhost:' + port + '/', function (err, resp, body) {
       assert.ifError(err);
       assert.equal(200, resp.statusCode);
-      console.log(body);
+      assert.equal(body, 'B');
+      done();
+    });
+  });
+  it('request 3', function (done) {
+    request({uri: 'http://localhost:' + port + '/', headers: {'Host': 'a.app.dev'}}, function (err, resp, body) {
+      assert.ifError(err);
+      assert.equal(200, resp.statusCode);
+      assert.equal(body, 'A');
+      done();
+    });
+  });
+  it('request 4', function (done) {
+    request({uri: 'http://localhost:' + port + '/', headers: {'Host': 'b.app.dev'}}, function (err, resp, body) {
+      assert.ifError(err);
+      assert.equal(200, resp.statusCode);
+      assert.equal(body, 'B');
+      done();
+    });
+  });
+  it('request 5', function (done) {
+    request({uri: 'http://localhost:' + port + '/', headers: {'Host': 'c.app.dev'}}, function (err, resp, body) {
+      assert.ifError(err);
+      assert.equal(200, resp.statusCode);
+      assert.equal(body, 'C');
       done();
     });
   });
