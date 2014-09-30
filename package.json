@@ -2,7 +2,10 @@
   "name": "dgate",
   "description": "Domain gateway, a simple clustered HTTP virtual host router",
   "version": "0.2.0",
-  "bin": "./dgate",
+  "bin": "./bin/dgate",
+  "scripts": {
+    "test": "./node_modules/.bin/mocha --reporter spec --timeout 10s --bail test/test.js"
+  },
   "repository": {
     "type": "git",
     "url": "git@gist.github.com:/2f4d3154687fb1641eca.git"
@@ -28,5 +31,9 @@
     "wildcard",
     "dns",
     "subdomain"
-  ]
+  ],
+  "devDependencies": {
+    "mocha": "^1.21.4",
+    "request": "^2.44.0"
+  }
 }

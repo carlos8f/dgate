@@ -1,0 +1,37 @@
+#!/usr/bin/env node
+
+var cluster = require('cluster')
+  , dgate = require('../')
+
+var cli = require('commander')
+  .version(dgate.pkg.version)
+  .description(dgate.pkg.description)
+  .option('-p, --port <port>', 'port to listen on (default: 8080)', Number, 8080)
+  .option('-w, --workers <num>', 'number of workers to fork (default: CPU count)', Number, require('os').cpus().length)
+  .option('-h, --hostfile <path>', 'path to hosts file (default: /etc/hosts)', String, '/etc/hosts')
+  .option('-v, --verbose', 'verbose request logging')
+  .option('--no-header', 'do not add X-Gate header')
+  .option('--setuid <uid|username>', '(POSIX, requires root) run under this uid (or username)')
+  .option('--setgid <gid|groupname>', '(POSIX, requires root) run under this gid (or groupname)')
+  .parse(process.argv)
+
+var options = {
+  port: cli.port,
+  workers: cli.workers,
+  hostfile: cli.hostfile,
+  verbose: cli.verbose,
+  header: cli.header,
+  setuid: cli.setuid,
+  setgid: cli.setgid
+};
+
+if (cluster.isMaster) {
+  dgate.master(options);
+}
+else {
+  var server = dgate.worker(options);
+  server.on('listening', function () {
+    if (options.setgid) process.setgid(options.setgid);
+    if (options.setuid) process.setuid(options.setuid);
+  });
+}
