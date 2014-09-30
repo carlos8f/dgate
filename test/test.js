@@ -89,6 +89,41 @@ describe('tests', function () {
       assert.ifError(err);
       assert.equal(200, resp.statusCode);
       assert.equal(body, 'C');
+      server.close();
+      done();
+    });
+  });
+  it('server 3', function (done) {
+    var options = {
+      vhosts: []
+    };
+    Object.keys(servers).forEach(function (letter) {
+      options.vhosts.push({
+        host: letter.toLowerCase() + '.app.dev',
+        wildcard: letter === 'B',
+        path: '**',
+        target: 'http://localhost:' + servers[letter],
+        options: {}
+      });
+    });
+    server = dgate.server(options);
+    server.listen(0, function () {
+      port = server.address().port;
+      done();
+    });
+  });
+  it('request 6', function (done) {
+    request({uri: 'http://localhost:' + port + '/', headers: {'Host': 'blah.c.app.dev'}}, function (err, resp, body) {
+      assert.ifError(err);
+      assert.equal(404, resp.statusCode);
+      done();
+    });
+  });
+  it('request 7', function (done) {
+    request({uri: 'http://localhost:' + port + '/', headers: {'Host': 'blah.b.app.dev'}}, function (err, resp, body) {
+      assert.ifError(err);
+      assert.equal(200, resp.statusCode);
+      assert.equal(body, 'B');
       done();
     });
   });
