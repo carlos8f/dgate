@@ -164,7 +164,7 @@ describe('tests', function () {
         });
         options.vhosts.push({
           host: letter.toLowerCase() + '.app.dev',
-          redirect: 'http://www.yelp.com/?href=__href__',
+          redirect: 'http://www.yelp.com/?href=__href_u',
           path: '/yelp'
         });
         options.vhosts.push({
