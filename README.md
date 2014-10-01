@@ -6,7 +6,8 @@ Domain gateway, a simple clustered HTTP virtual host router
 
 `dgate` is a Node.js-based HTTP gateway. It can proxy incoming requests to any host or port,
 based on a flexible set of rules, defined as comments in your `/etc/hosts` file. `dgate` makes use
-of [cluster](http://nodejs.org/api/cluster.html) forking for better performance on a multi-core machine.
+of [cluster](http://nodejs.org/api/cluster.html) forking for better performance on a multi-core machine,
+and privilege separation for better security.
 
 Features:
 
@@ -30,7 +31,7 @@ $ [sudo] npm install -g dgate
 $ sudo dgate --verbose --port 80
 ```
 
-On POSIX you can drop privileges:
+On POSIX you can drop privileges for tighter security:
 
 ```
 $ sudo dgate --verbose --port 80 --setuid nobody --setgid nogroup
