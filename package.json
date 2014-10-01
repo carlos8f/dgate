@@ -13,6 +13,7 @@
   "author": "Carlos Rodriguez <carlos@s8f.org> (http://s8f.org/)",
   "license": "MIT",
   "dependencies": {
+    "addr": "^1.0.1",
     "commander": "^2.3.0",
     "dollop": "^0.4.1",
     "href": "^0.1.1",
