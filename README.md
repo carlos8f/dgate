@@ -4,7 +4,7 @@ Domain gateway, a simple clustered HTTP virtual host router
 
 ## Purpose
 
-`dgate` is a Node.js-based HTTP gateway. It can proxy incoming requests to any host or port,
+`dgate` is a Node.js-based HTTP gateway. It can proxy or redirect incoming requests to any host or port,
 based on a flexible set of rules, defined as comments in your `/etc/hosts` file. `dgate` makes use
 of [cluster](http://nodejs.org/api/cluster.html) forking for better performance on a multi-core machine,
 and privilege separation for better security.
@@ -59,10 +59,8 @@ Then `sudo service dgate start` to run the server.
 
 ## Configuration
 
-`dgate` works by reading the domain -> IP mappings in your `/etc/hosts` file. Additionally you **MUST** provide
-a `#dgate` comment above each line you wish to enable as a virtual host.
-
-### dgate comment syntax
+`dgate` works by reading the domain -> IP mappings in your `/etc/hosts` file and turning them into virtual hosts.
+Additionally you **MUST** provide a `#dgate` comment above each line you wish to enable as a virtual host:
 
 ```
 #dgate option1=value1&option2=value2
@@ -72,18 +70,49 @@ a `#dgate` comment above each line you wish to enable as a virtual host.
 <ip2>     <hostname3> [hostname4...]
 ```
 
+### /etc/hosts Example
+
+```
+# route traffic from my.dev to 127.0.0.1:3000
+#dgate port=3000
+127.0.0.1    my.dev
+
+# route traffic from *.myother.dev to 127.0.0.1:3001
+#dgate port=3001&wildcard=true
+127.0.0.1    myother.dev
+
+# route traffic from *.blah.dev to terraeclipse.com
+#dgate target=terraeclipse.com&wildcard=true
+127.0.0.1    blah.dev
+
+# make this the default vhost, with a canonical url (also force https)
+#dgate port=3002&default=true&canonical=s8f.org&https=true
+127.0.0.1    s8f.org www.s8f.org
+
+# redirect requests from mytemp.com to myreal.com/$path
+#dgate redirect=myreal.com__path
+127.0.0.1    mytemp.com
+```
+
+### Order of operations
+
+1. If a match is found, the one first defined is served
+2. else if defined, the default is served
+3. else a 404 response is generated.
+
 To disable a rule, just add a space between `#` and `dgate`.
 
-### dgate comment options
+### Virtual host options
 
 Values must be properly urlencoded, i.e. in JavaScript `encodeURIComponent(value)`
 
 - `port=number` (**required** unless using `target` or `redirect`) - the TCP port of the target to proxy to, appended to the IP from the `/etc/hosts` rule.
 - `target=host[:port]` (**required** unless using `port` or `redirect`) - the target host, and optional port to proxy to, i.e. `example.com:80` (supports token replacement, see below)
 - `redirect=url` (**required** unless using `port` or `target`) - redirect all requests to the specified url. (supports token replacement, see below)
+- `path=glob` - match the virtual host only if the incoming path matches the glob. i.e. `/some/**/path`
 - `canonical=host` - redirect requests to this hostname if the request's `Host` header doesn't match it. i.e. `www.example.com`
 - `wildcard=true` - also accept requests to subdomains of the matched hostname.
-- `default=true` - treat the line as the "default" virtual host, falling back to it if no other matches are found.
+- `default=true` - treat the virtual host as "default", falling back to it if no other matches are found.
 - `https=true` - force HTTPS by redirecting requests to `https://` version of URLs.
 - `sethost=host` - artificially set the `Host` header when forwarding requests to the proxy target. i.e. `specific.host.example.com`
 
@@ -117,30 +146,6 @@ This will redirect requests mydomain.com to `http://www.example.com/?href=(urlen
 - `__path` The requested path, including query string, i.e. `/some/path?blah=1&foo=bar`
 - `__href` The requested absolute URL, i.e. `http://my:pass@localhost:3000/some/path?blah=1&foo=bar`
 - `__ip` The remote IP address, i.e. `127.0.0.1`
-
-### /etc/hosts Example
-
-```
-# route traffic from my.dev to 127.0.0.1:3000
-#dgate port=3000
-127.0.0.1    my.dev
-
-# route traffic from *.myother.dev to 127.0.0.1:3001
-#dgate port=3001&wildcard=true
-127.0.0.1    myother.dev
-
-# route traffic from *.blah.dev to terraeclipse.com
-#dgate target=terraeclipse.com&wildcard=true
-127.0.0.1    blah.dev
-
-# make this the default vhost, with a canonical url (also force https)
-#dgate port=3002&default=true&canonical=s8f.org&https=true
-127.0.0.1    s8f.org www.s8f.org
-
-# redirect requests from mytemp.com to myreal.com/$path
-#dgate redirect=myreal.com__path
-127.0.0.1    mytemp.com
-```
 
 ## TODO
 
