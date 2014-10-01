@@ -23,8 +23,7 @@ describe('tests', function () {
       options.vhosts.push({
         host: letter.toLowerCase() + '.app.dev',
         path: '**',
-        target: 'http://localhost:' + servers[letter],
-        options: {}
+        target: 'http://localhost:' + servers[letter]
       });
     });
     server = dgate.server(options);
@@ -50,8 +49,7 @@ describe('tests', function () {
         host: letter.toLowerCase() + '.app.dev',
         default: letter === 'B',
         path: '**',
-        target: 'http://localhost:' + servers[letter],
-        options: {}
+        target: 'http://localhost:' + servers[letter]
       });
     });
     server = dgate.server(options);
@@ -103,8 +101,7 @@ describe('tests', function () {
         sethost: 'app.dev',
         wildcard: letter === 'B',
         path: '**',
-        target: 'http://localhost:' + servers[letter],
-        options: {}
+        target: 'http://localhost:' + servers[letter]
       });
     });
     server = dgate.server(options);
@@ -149,6 +146,69 @@ describe('tests', function () {
       assert.ifError(err);
       assert.equal(404, resp.statusCode);
       server.close();
+      done();
+    });
+  });
+  it('server 4', function (done) {
+    var options = {
+      vhosts: []
+    };
+    Object.keys(servers).forEach(function (letter) {
+      if (letter === 'B') {
+        options.vhosts.push({
+          host: letter.toLowerCase() + '.app.dev',
+          redirect: 'http://www.google.com/',
+          path: '/google'
+        });
+        options.vhosts.push({
+          host: letter.toLowerCase() + '.app.dev',
+          redirect: 'http://www.yelp.com/?href=__href__',
+          path: '/yelp'
+        });
+        options.vhosts.push({
+          host: letter.toLowerCase() + '.app.dev',
+          target: 'http://localhost:' + servers[letter],
+          path: '**'
+        });
+      }
+      else {
+        options.vhosts.push({
+          host: letter.toLowerCase() + '.app.dev',
+          sethost: 'app.dev',
+          default: letter === 'A',
+          path: '**',
+          target: 'http://localhost:' + servers[letter],
+          options: {}
+        });
+      }
+    });
+    server = dgate.server(options);
+    server.listen(0, function () {
+      port = server.address().port;
+      done();
+    });
+  });
+  it('request 11', function (done) {
+    request({uri: 'http://localhost:' + port + '/google', headers: {'Host': 'b.app.dev'}, followRedirect: false}, function (err, resp, body) {
+      assert.ifError(err);
+      assert.equal(301, resp.statusCode);
+      assert.equal(resp.headers['location'], 'http://www.google.com/');
+      done();
+    });
+  });
+  it('request 12', function (done) {
+    request({uri: 'http://localhost:' + port + '/yelp', headers: {'Host': 'b.app.dev'}, followRedirect: false}, function (err, resp, body) {
+      assert.ifError(err);
+      assert.equal(301, resp.statusCode);
+      assert.equal(resp.headers['location'], 'http://www.yelp.com/?href=http%3A%2F%2Fb.app.dev%2Fyelp');
+      done();
+    });
+  });
+  it('request 13', function (done) {
+    request({uri: 'http://localhost:' + port + '/blah', headers: {'Host': 'b.app.dev'}, followRedirect: false}, function (err, resp, body) {
+      assert.ifError(err);
+      assert.equal(200, resp.statusCode);
+      assert.equal(body, 'B,b.app.dev');
       done();
     });
   });
