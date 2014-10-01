@@ -42,7 +42,8 @@ describe('tests', function () {
   });
   it('server 2', function (done) {
     var options = {
-      vhosts: []
+      vhosts: [],
+      header: true
     };
     Object.keys(servers).forEach(function (letter) {
       options.vhosts.push({
@@ -63,6 +64,7 @@ describe('tests', function () {
       assert.ifError(err);
       assert.equal(200, resp.statusCode);
       assert.equal(body, 'B,localhost');
+      assert.equal(resp.headers['x-gate'], dgate.pkg.name + '/' + dgate.pkg.version);
       done();
     });
   });
