@@ -125,7 +125,7 @@ Some options such as `redirect` can contain placeholders to be filled in by requ
 127.0.0.1     mydomain.com
 ```
 
-This will redirect requests mydomain.com to `http://www.example.com/?href=(urlencoded version of the originally requested absolute URL)`
+This will redirect requests from mydomain.com to `http://www.example.com/?href=(urlencoded version of the originally requested absolute URL)`
 
 #### Auto URL encoding
 
