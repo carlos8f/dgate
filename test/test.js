@@ -148,6 +148,7 @@ describe('tests', function () {
     request({uri: 'http://localhost:' + port + '/', headers: {'Host': 'app.dev'}}, function (err, resp, body) {
       assert.ifError(err);
       assert.equal(404, resp.statusCode);
+      server.close();
       done();
     });
   });

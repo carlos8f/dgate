@@ -5,4 +5,5 @@ exports.match = require('./lib/match');
 exports.parse = require('./lib/parse');
 exports.proxy = require('./lib/proxy');
 exports.server = require('./lib/server');
+exports.tokens = require('./lib/tokens');
 exports.worker = require('./lib/worker');
