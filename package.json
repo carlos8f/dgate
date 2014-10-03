@@ -15,6 +15,7 @@
   "dependencies": {
     "addr": "^1.0.1",
     "commander": "^2.3.0",
+    "dish": "^1.0.4",
     "dollop": "^0.4.1",
     "href": "^0.1.1",
     "http-proxy": "^1.4.3",

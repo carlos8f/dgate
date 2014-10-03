@@ -106,9 +106,10 @@ To disable a rule, just add a space between `#` and `dgate`.
 
 Values must be properly urlencoded, i.e. in JavaScript `encodeURIComponent(value)`
 
-- `port=number` (**required** unless using `target` or `redirect`) - the TCP port of the target to proxy to, appended to the IP from the `/etc/hosts` rule.
-- `target=host[:port]` (**required** unless using `port` or `redirect`) - the target host, and optional port to proxy to, i.e. `example.com:80` (supports token replacement, see below)
-- `redirect=url` (**required** unless using `port` or `target`) - redirect all requests to the specified url. (supports token replacement, see below)
+- `port=number` (**required** unless using an alternative listed below) - the TCP port of the target to proxy to, appended to the IP from the `/etc/hosts` rule.
+- `target=host[:port]` (alternative to `port`) - the target host, and optional port to proxy to, i.e. `example.com:80` (supports token replacement, see below)
+- `redirect=url` (alternative to `port`) - redirect all requests to the specified url. (supports token replacement, see below)
+- `file=abspath` (alternative to `port`) - serve a file instead of proxying or redirecting. (path supports token replacement, see below)
 - `path=glob` - match the virtual host only if the incoming path matches the glob. i.e. `/some/**/path`
 - `canonical=host` - redirect requests to this hostname if the request's `Host` header doesn't match it. i.e. `www.example.com`
 - `wildcard=true` - also accept requests to subdomains of the matched hostname.

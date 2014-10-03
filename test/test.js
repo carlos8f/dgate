@@ -211,6 +211,37 @@ describe('tests', function () {
       assert.ifError(err);
       assert.equal(200, resp.statusCode);
       assert.equal(body, 'B,b.app.dev');
+      server.close();
+      done();
+    });
+  });
+  it('server 1', function (done) {
+    var options = {
+      vhosts: [
+        {
+          path: '/_health',
+          file: __dirname + '/fixtures/health.txt'
+        }
+      ]
+    };
+    server = dgate.server(options);
+    server.listen(0, function () {
+      port = server.address().port;
+      done();
+    });
+  });
+  it('request 14', function (done) {
+    request({uri: 'http://localhost:' + port + '/blah'}, function (err, resp, body) {
+      assert.ifError(err);
+      assert.equal(404, resp.statusCode);
+      done();
+    });
+  });
+  it('request 15', function (done) {
+    request({uri: 'http://localhost:' + port + '/_health'}, function (err, resp, body) {
+      assert.ifError(err);
+      assert.equal(200, resp.statusCode);
+      assert.equal(body, "i'm ok!");
       done();
     });
   });
