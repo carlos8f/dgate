@@ -1,7 +1,7 @@
 {
   "name": "dgate",
   "description": "Domain gateway, a simple clustered HTTP virtual host router",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "bin": "./bin/dgate",
   "scripts": {
     "test": "./node_modules/.bin/mocha --reporter spec --timeout 10s --bail test/test.js"
