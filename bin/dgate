@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/local/bin/node
 
 var cluster = require('cluster')
   , dgate = require('../')
@@ -9,6 +9,9 @@ var cli = require('commander')
   .option('-p, --port <port>', 'port to listen on (default: 8080)', Number, 8080)
   .option('-w, --workers <num>', 'number of workers to fork (default: CPU count)', Number, require('os').cpus().length)
   .option('-h, --hostfile <path>', 'path to hosts file (default: /etc/hosts)', String, '/etc/hosts')
+  .option('--sslCert <path>', 'path to an SSL certificate to use')
+  .option('--sslKey <path>', 'path to an SSL private key to use')
+  .option('--sslMethod <method>', 'SSL Method to use (default: "TLSv1_method")', String, 'TLSv1_method')
   .option('-v, --verbose', 'verbose request logging')
   .option('--no-header', 'do not add X-Gate header')
   .option('--setuid <uid|username>', '(POSIX, requires root) run under this uid (or username)')
@@ -19,6 +22,9 @@ var options = {
   port: cli.port,
   workers: cli.workers,
   hostfile: cli.hostfile,
+  sslCert: cli.sslCert,
+  sslKey: cli.sslKey,
+  sslMethod: cli.sslMethod,
   verbose: cli.verbose,
   header: cli.header,
   setuid: cli.setuid,
