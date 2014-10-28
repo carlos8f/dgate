@@ -12,8 +12,9 @@ and privilege separation for better security.
 Features:
 
 - serve an arbitrary number of web apps on a single port
+- SSL termination
 - virtual host matching on domain, subdomain, wildcard, or path
-- develop several apps locally, each accessible on port 80, and use domains like `test.dev`
+- develop several apps locally, and use domains like `test.dev`
 - enforce canonical domains, SSL, or redirect certain domains/paths to arbitrary locations
 - central logging for all requests
 - use all your CPUs with flexible worker pool
@@ -35,6 +36,12 @@ On POSIX you can drop privileges for tighter security:
 
 ```
 $ sudo dgate --verbose --port 80 --setuid nobody --setgid nogroup
+```
+
+To enable SSL, use these options:
+
+```
+$ sudo dgate --verbose --port 443 --sslCert /path/to/server.pem --sslKey /path/to/server.key --setuid nobody --setgid nogroup
 ```
 
 ### Ubuntu upstart script
@@ -153,6 +160,4 @@ This will redirect requests from mydomain.com to `http://www.example.com/?href=(
 - path rewriting, i.e. proxy `http://test.dev/myapp/*` to `http://127.0.0.1:3000/*`
 - option for redirect status code, 302 or 301
 - custom error pages
-- custom or auto robots.txt or favicon
-- custom or auto health check
 - redundant targets + load balancing strategy
