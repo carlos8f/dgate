@@ -11,6 +11,7 @@ var cli = require('commander')
   .option('-h, --hostfile <path>', 'path to hosts file (default: /etc/hosts)', String, '/etc/hosts')
   .option('--sslCert <path>', 'path to an SSL certificate to use')
   .option('--sslKey <path>', 'path to an SSL private key to use')
+  .option('--sslCiphers <ciphers>', 'list of OpenSSL ciphers to support', String, '')
   .option('-v, --verbose', 'verbose request logging')
   .option('--no-header', 'do not add X-Gate header')
   .option('--setuid <uid|username>', '(POSIX, requires root) run under this uid (or username)')
@@ -23,7 +24,7 @@ var options = {
   hostfile: cli.hostfile,
   sslCert: cli.sslCert,
   sslKey: cli.sslKey,
-  sslMethod: cli.sslMethod,
+  sslCiphers: cli.sslCiphers,
   verbose: cli.verbose,
   header: cli.header,
   setuid: cli.setuid,
