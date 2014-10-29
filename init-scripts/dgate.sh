@@ -34,7 +34,7 @@ RETVAL=0
 
 start() {
   echo -n $"Starting ${BASENAME}: "
-  daemon --check ${BASENAME} nohup /usr/local/bin/dgate --port ${PORT} --verbose --setuid ${USER} --setgid ${GROUP} >> /var/log/${BASENAME}.log 2>&1 &
+  daemon --check ${BASENAME} nohup /usr/local/bin/dgate --port ${PORT} --setuid ${USER} --setgid ${GROUP} >> /var/log/${BASENAME}.log 2>&1 &
   RETVAL=$?
   if [ $RETVAL -eq 0 ]; then
     echo

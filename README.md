@@ -35,34 +35,14 @@ $ sudo dgate --verbose --port 80
 On POSIX you can drop privileges for tighter security:
 
 ```
-$ sudo dgate --verbose --port 80 --setuid nobody --setgid nogroup
+$ sudo dgate --port 80 --setuid nobody --setgid nogroup
 ```
 
 To enable SSL, use these options:
 
 ```
-$ sudo dgate --verbose --port 443 --sslCert /path/to/server.pem --sslKey /path/to/server.key --setuid nobody --setgid nogroup
+$ sudo dgate --port 443 --sslCert /path/to/server.pem --sslKey /path/to/server.key --setuid nobody --setgid nogroup
 ```
-
-### Ubuntu upstart script
-
-If you'd rather run it as a proper service on boot, and you're on Ubuntu,
-you can write this to `/etc/init/dgate.conf`:
-
-```
-# dgate.conf
-description "domain gateway"
-start on started networking
-stop on runlevel [016]
-limit nofile 1000000 1000000
-console log
-script
-  dgate --port 80 --setuid nobody --setgid nogroup --verbose
-end script
-respawn
-```
-
-Then `sudo service dgate start` to run the server.
 
 ## Configuration
 
