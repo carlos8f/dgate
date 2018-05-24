@@ -16,6 +16,7 @@ var cli = require('commander')
   .option('--no-header', 'do not add X-Gate header')
   .option('--setuid <uid|username>', '(POSIX, requires root) run under this uid (or username)')
   .option('--setgid <gid|groupname>', '(POSIX, requires root) run under this gid (or groupname)')
+  .option('--proxies <comma-separated-ips>', 'honor x-forwarded-for for known reverse-proxy server(s)')
   .parse(process.argv)
 
 var options = {
@@ -28,7 +29,8 @@ var options = {
   verbose: cli.verbose,
   header: cli.header,
   setuid: cli.setuid,
-  setgid: cli.setgid
+  setgid: cli.setgid,
+  proxies: cli.proxies ? cli.proxies.split(',').filter((x) => { return !!x }) : null
 };
 
 if (cluster.isMaster) {
